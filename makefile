@@ -1,12 +1,12 @@
 CC=g++
-OUT = my_program
+OUT = snake
 CFLAGS=-Isrc/
 SRCDIR = src/
 #OBJDIR = .obj/
 CPPFILES = $(wildcard $(SRCDIR)*.cpp)
 OBJS = $(CPPFILES:.cpp=.o)
 
-LDLIBS = -lfmt -lnotcurses
+LDLIBS = -lfmt
 #@mkdir -p .obj
 
 main: $(OBJS)
