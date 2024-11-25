@@ -1,5 +1,4 @@
-#ifndef SNAKE_H
-#define SNAKE_H
+#pragma once
 
 #include <vector>
 #include <deque>
@@ -109,6 +108,4 @@ public:
 		hasEaten = true;
 	}
 };
-
-#endif
 

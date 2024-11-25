@@ -1,5 +1,4 @@
-#ifndef BOARD_H
-#define BOARD_H
+#pragma once
 
 #include <tuple>
 #include <vector>
@@ -176,4 +175,3 @@ public:
 
 };
 
-#endif
