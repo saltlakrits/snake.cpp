@@ -26,14 +26,16 @@ private:
 	std::vector<std::vector<int>> board {};
 	Snake snake;
 	std::vector<int> fruit {};
-	int sleepTime = 1000;
 
 public:
+	int sleepTime = 100;
+	bool hasLost = false;
+
 
 	Board(int boardWidth, int boardHeight, int startX, int startY) : snake(startX, startY) {
 		width = boardWidth;
 		height = boardHeight;
-		generateBoard();
+		initializeBoard();
 
 		// pseudo random seed, for placing fruit
 		srand(time(NULL));
@@ -41,7 +43,7 @@ public:
 
 	}
 
-	void generateBoard() {
+	void initializeBoard() {
 		// Generate empty board
 		for (int y = 0; y < height; y++) {
 			board.resize(height);
@@ -56,10 +58,17 @@ public:
 		// check if head is outside map (or collided with itself?) here?
 
 		std::vector<int> head = snake.show()[0];
-		setTile(head[0], head[1], 1);
+		// TODO: unless i have width-1 and height-1 i get a segfault -- is it wrong here,
+		// or elsewhere?
+		if (head[0] < 0 or head[0] > width-1 or head[1] < 0 or head[1] > height-1) {
+			hasLost = true;
+		}
+		else {
+			setTile(head[0], head[1], 1);
 
-		for (int i = 1; i < snake.size(); i++) {
-			setTile(snake.show()[i][0], snake.show()[i][1], 2);
+			for (int i = 1; i < snake.size(); i++) {
+				setTile(snake.show()[i][0], snake.show()[i][1], 2);
+			}
 		}
 	}
 
@@ -122,8 +131,15 @@ public:
 			fmt::print("\n");
 		}
 	}
+	void generateBoard() {
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				board[y][x] = 0;
+			}
+		}
+	}
 
-	void tick(char input) {
+	std::vector<std::vector<int>> tick(char input) {
 		// a game tick
 
 		snake.setHeading(input);
@@ -136,7 +152,7 @@ public:
 		std::vector<int> head = snake.show()[0];
 		if (head == fruit) {
 			snake.eatFruit();
-			sleepTime = std::floor(sleepTime * 0.95);
+			sleepTime = std::floor(sleepTime * 0.99);
 			placeFruit();
 		}
 
@@ -150,9 +166,11 @@ public:
 		setTile(fruit[0], fruit[1], 3);
 
 		// draw output
-		drawBoard();
+		//drawBoard();
 
-		usleep(sleepTime * K);
+		//usleep(sleepTime * K);
+
+		return board;
 	}
 
 };

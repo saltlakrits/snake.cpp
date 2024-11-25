@@ -74,11 +74,11 @@ public:
 		// now we add the new head (tile) to the snakePath
 		snakePath.push_front(new_head);
 		// unless we do want to grow, we want to pop the last coord
-		if (!hasEaten) {
-			snakePath.pop_back();
+		if (hasEaten | (snakePath.size() <= 3)) {
+			hasEaten = false;
 		}
 		else {
-			hasEaten = false;
+			snakePath.pop_back();
 		}
 	}
 

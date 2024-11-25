@@ -6,7 +6,7 @@ SRCDIR = src/
 CPPFILES = $(wildcard $(SRCDIR)*.cpp)
 OBJS = $(CPPFILES:.cpp=.o)
 
-LDLIBS = -lfmt
+LDLIBS = -lfmt -lncursesw
 #@mkdir -p .obj
 
 main: $(OBJS)
