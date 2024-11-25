@@ -30,16 +30,26 @@ int main() {
 	curs_set(0);
 	nodelay(stdscr, TRUE);
 
+	/* TODO
+	 * Game boundaries/window box mismatched, you can
+	 * both go under the border and not close enough to
+	 * the border.
+	 * TODO
+	 * Background color? Might help with issue 1 as well.
+	 * TODO
+	 * Control issue?
+	 * TODO
+	 * You shouldn't be able to switch direction 180 degrees!
+	 */
 	// TODO Place window in the middle of the screen
-	WINDOW *win = newwin(HEIGHT + 1, WIDTH + 1, 2, 10);
+	WINDOW *win = newwin(HEIGHT + 1, WIDTH + 1, 0, 0);
 	refresh();
 
 	// TODO Either this box is offset or something else is
 	// BORKED, but you can go hang out under the left and
 	// upper boundaries
 	box(win, 0, 0);
-	//mvprintw(win, 1, 1, "TEST");
-	mvwprintw(win, 1, 1, "TEST");
+	//mvwprintw(win, 1, 1, "TEST");
 	wrefresh(win);
 
 	int halfWidth = std::floor(WIDTH/2);
@@ -52,12 +62,9 @@ int main() {
 //	std::cout.rdbuf()->pubsetbuf(nullptr, 0); // Disable buffering for std::cout
 
 	while (true) {
-		//std::system("clear");
 
-		//char input;
-		// get a char
-		//std::cin.get(input);
-		//char input = 'w';
+		// TODO Pretty sure holding a key somehow blocks further
+		// input for a bit
 		int ch;
 		ch = getch();
 
@@ -95,5 +102,6 @@ int main() {
 	curs_set(1);
 	endwin();
 
+	fmt::print("You lost :(\n\n");
 	return 0;
 }

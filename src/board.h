@@ -60,7 +60,7 @@ public:
 		std::vector<int> head = snake.show()[0];
 		// TODO: unless i have width-1 and height-1 i get a segfault -- is it wrong here,
 		// or elsewhere?
-		if (head[0] < 0 or head[0] > width-1 or head[1] < 0 or head[1] > height-1) {
+		if (head[0] < 0 or head[0] == width or head[1] < 0 or head[1] == height) {
 			hasLost = true;
 		}
 		else {
@@ -103,6 +103,7 @@ public:
 	}
 
 	void drawBoard() {
+		// OBSOLETE
 		for (int y = 0; y <= height + 1; y++) {
 			for (int x = 0; x <= width + 1; x++) {
 				// this is pretty ugly
