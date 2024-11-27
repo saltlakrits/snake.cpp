@@ -28,16 +28,16 @@ public:
 	// push_back and front, pop_back and front
 
 	void setHeading(char input) {
-		if (input == 'w') {
+		if (input == 'w' && heading != DOWN) {
 			heading = UP;
 		}
-		else if (input == 'd') {
+		else if (input == 'd' && heading != LEFT) {
 			heading = RIGHT;
 		}
-		else if (input == 's') {
+		else if (input == 's' && heading != UP) {
 			heading = DOWN;
 		}
-		else if (input == 'a') {
+		else if (input == 'a' && heading != RIGHT) {
 			heading = LEFT;
 		}
 	}
