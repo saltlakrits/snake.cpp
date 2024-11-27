@@ -146,6 +146,9 @@ public:
 
 		// move snake
 		snake.move();
+		if (snake.collided_with_self()) {
+			hasLost = true;
+		}
 
 		// check if overlapping with fruit and eat it, setting hasEaten on snake or calling method
 		// generate a new fruit as well

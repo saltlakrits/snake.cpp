@@ -99,9 +99,15 @@ public:
 		return snakePath.size();
 	}
 
-	void check_collided() {
+	bool collided_with_self() {
 		// check if collided with itself?
 		// and/or board boundaries?
+		for (int i = 1; i < size(); i++) {
+			if (snakePath[0] == snakePath[i]) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	void eatFruit() {
