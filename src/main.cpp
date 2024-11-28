@@ -58,26 +58,26 @@ auto main() -> int {
 
 		board.tick(ch);
 
-		if (board.get_hasLost()) {
+		if (board.getHasLost()) {
 			break;
 		}
 
 		for (int y = 1; y <= HEIGHT; y++) {
 			for (int x = 1; x <= WIDTH; x++) {
-				if (board.get_offsetTile(x, y) == 0) {
+				if (board.getOffsetTile(x, y) == 0) {
 					mvwaddch(win, y, x, ' ');
 				}
-				else if (board.get_offsetTile(x, y) == 1) {
+				else if (board.getOffsetTile(x, y) == 1) {
 					wattron(win, COLOR_PAIR(1));
 					mvwaddch(win, y, x, '#');
 					wattroff(win, COLOR_PAIR(1));
 				}
-				else if (board.get_offsetTile(x, y) == 2) {
+				else if (board.getOffsetTile(x, y) == 2) {
 					wattron(win, COLOR_PAIR(1));
 					mvwaddch(win, y, x, '#');
 					wattroff(win, COLOR_PAIR(1));
 				}
-				else if (board.get_offsetTile(x, y) == 3) {
+				else if (board.getOffsetTile(x, y) == 3) {
 					wattron(win, COLOR_PAIR(2));
 					mvwaddch(win, y, x, 'O');
 					wattroff(win, COLOR_PAIR(2));
@@ -85,12 +85,12 @@ auto main() -> int {
 			}
 		}
 		wrefresh(win);
-		usleep(board.get_sleepTime() * K);
+		usleep(board.getSleepTime() * K);
 	}
 
 	curs_set(1);
 	endwin();
 
-	fmt::print("\nYou lost :(\nYou ate {} fruit!\n\n", board.get_fruitsEaten());
+	fmt::print("\nYou lost :(\nYou ate {} fruit!\n\n", board.getFruitsEaten());
 	return 0;
 }

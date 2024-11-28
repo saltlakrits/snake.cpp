@@ -44,13 +44,13 @@ public:
 
 		// move snake
 		snake.move(input);
-		if (snake.collided_with_self()) {
+		if (snake.collidedWithSelf()) {
 			hasLost = true;
 		}
 
 		// check if eating fruit
 		// generate a new fruit if needed
-		std::vector<int> head = snake.show()[0];
+		std::vector<int> head = snake.getPath()[0];
 
 		if (head == fruit) {
 			snake.eatFruit();
@@ -71,23 +71,23 @@ public:
 		setTile(fruit[0], fruit[1], 3);
 
 	}
-	auto get_hasLost() -> bool {
+	auto getHasLost() -> bool {
 		return hasLost;
 	}
 
-	auto get_sleepTime() -> int {
+	auto getSleepTime() -> int {
 		return sleepTime;
 	}
 
-	auto get_fruitsEaten() -> int {
+	auto getFruitsEaten() -> int {
 		return fruitsEaten;
 	}
 
-	auto get_tile(int x, int y) -> int {
+	auto getTile(int x, int y) -> int {
 		return board[y][x];
 	}
 
-	auto get_offsetTile(int x, int y) -> int {
+	auto getOffsetTile(int x, int y) -> int {
 		// offset for drawing, works in ncurses
 		return board[y - 1][x - 1];
 	}
@@ -122,7 +122,7 @@ private:
 
 	void placeSnake() {
 
-		std::vector<int> head = snake.show()[0];
+		std::vector<int> head = snake.getPath()[0];
 
 		if (head[0] < 0 || head[0] == width || head[1] < 0 || head[1] == height) {
 			hasLost = true;
@@ -131,7 +131,7 @@ private:
 			setTile(head[0], head[1], 1);
 
 			for (int i = 1; i < snake.length(); i++) {
-				setTile(snake.show()[i][0], snake.show()[i][1], 2);
+				setTile(snake.getPath()[i][0], snake.getPath()[i][1], 2);
 			}
 		}
 	}
@@ -142,7 +142,7 @@ private:
 		int random_y = rand() % height;
 
 		std::vector<int> new_fruit = {random_x, random_y};
-		std::deque<std::vector<int>> path = snake.show();
+		std::deque<std::vector<int>> path = snake.getPath();
 
 		for (int i = 0; i < snake.length(); i++) {
 			if (path[i] == new_fruit) {
