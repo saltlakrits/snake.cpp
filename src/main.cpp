@@ -7,7 +7,7 @@
 // usleep works in microseconds, so multiplying by K gives milliseconds
 #define K 1000
 
-#define WIDTH 40
+#define WIDTH 20
 #define HEIGHT 20
 
 // how many times wider will we draw the
@@ -27,21 +27,32 @@ auto main() -> int {
 
   // initializing ncurses
   initscr();
+  // note that from here on COLS, LINES are defined as the
+  // line- and columncount of the term
 
-  if (LINES < HEIGHT || COLS < WIDTH * GRAPHICAL_X_MULTIPLIER) {
+  // TODO Implement setting integer scale manually via CLI arg
+
+  // check if LINES/COLS are big enough for minimum dimensions
+  if (LINES < HEIGHT + 3 || COLS < (WIDTH + 2) * GRAPHICAL_X_MULTIPLIER) {
+    endwin();
     std::cout << "Your terminal window is, somehow, too small.\n\
 				For your own sake, and mine, make it bigger."
               << std::endl;
     std::exit(1);
   }
 
-  // dynamic sizing calculation
+  // dynamic sizing still does not work
+  // the above if statement ensures it won't launch if too small,
+  // but it can be big enough and yet you'll see nothing
   int width = COLS / WIDTH;
   // + 1 to have space for score?
-  int height = (LINES + 1) / HEIGHT; // TODO Maybe this is not the way?
+  // TODO Maybe this is not the way? I want an extra line for score
+  int height = (LINES + 1) / HEIGHT;
   int screenSizeMultiple = std::min(width, height);
+
   // ensure at least 1
   screenSizeMultiple = (screenSizeMultiple == 0) ? 1 : screenSizeMultiple;
+  // screenSizeMultiple = 1; // DEBUG
   int y_multiple = screenSizeMultiple;
   // x multiplied by two to try and make things as wide as they are tall
   int x_multiple = screenSizeMultiple * GRAPHICAL_X_MULTIPLIER;
@@ -66,6 +77,17 @@ auto main() -> int {
   // will be WIDTH*2, WIDTH*4, WIDTH*6...
   int window_width = WIDTH * x_multiple;
 
+  // check if LINES/COLS are big enough for scaled dimensions
+  if (LINES < window_height + 3 || COLS < (window_width + 2)) {
+    curs_set(1);
+    endwin();
+    std::cout << "Your terminal window is, somehow, too small.\n\
+				For your own sake, and mine, make it bigger.\n"
+              << "SCALING ERROR: LINES: " << LINES << ", COLS: " << COLS
+              << ", window_height: " << window_height
+              << ", window_width: " << window_width << std::endl;
+    std::exit(1);
+  }
   // approximate center of screen
   int startx = (COLS - window_width) / 2;
   int starty = (LINES - window_height) / 2;
@@ -79,6 +101,7 @@ auto main() -> int {
   wattron(win, COLOR_PAIR(BLOCK_BORDER));
   box(win, 0, 0);
   wattroff(win, COLOR_PAIR(BLOCK_BORDER));
+
   wrefresh(win);
 
   // init board
@@ -99,7 +122,9 @@ auto main() -> int {
     score_c = scoreLine.c_str();
     // we are only printing this string, can ignore warning since
     // it doesn't come from user input, i think
-    mvprintw(starty - 1, startx + window_width - scoreLen + GRAPHICAL_X_MULTIPLIER, score_c);
+    mvprintw(starty - 1,
+             startx + window_width - scoreLen + GRAPHICAL_X_MULTIPLIER,
+             score_c);
 
     if (board.getHasLost()) {
       break;
@@ -114,8 +139,8 @@ auto main() -> int {
           // repeat x draw x_multiple times
           for (int z = 0; z < x_multiple; z++) {
             // drawing coords converted to internal game coords
-            int game_x = x / x_multiple;
-            int game_y = y / y_multiple;
+            int game_x = (x - 1) / x_multiple;
+            int game_y = (y - 1) / y_multiple;
 
             if (board.getTile(game_x, game_y) == 0) {
               mvwprintw(win, y + i, x + z, " ");
@@ -132,9 +157,7 @@ auto main() -> int {
         }
       }
     }
-    wattron(win, COLOR_PAIR(BLOCK_BORDER));
-    box(win, 0, 0);
-    wattroff(win, COLOR_PAIR(BLOCK_BORDER));
+
     wrefresh(win);
     usleep(board.getSleepTime() * K);
   }
