@@ -1,3 +1,3 @@
-# Terrible snake game
+# Terrible snake game in C++ using ncurses
 
-Maybe try using TermOx when this is working?
+Think I'll try to use TermOx too?
