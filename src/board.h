@@ -1,12 +1,8 @@
 #pragma once
 
-#include <tuple>
 #include <vector>
-#include <optional>
 #include <fmt/core.h>
 #include <time.h>
-#include <unistd.h>
-#include <math.h>
 
 #include "snake.h"
 
