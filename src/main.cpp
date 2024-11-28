@@ -1,9 +1,8 @@
 #include "board.h"
-#include <ncurses.h>
-// #include <fmt/core.h>
 #include <iostream>
+#include <ncurses.h>
 #include <unistd.h>
-//
+
 // usleep works in microseconds, so multiplying by K gives milliseconds
 #define K 1000
 
@@ -13,15 +12,12 @@
 // how many times wider will we draw the
 // horizontal chars than the vertical
 #define GRAPHICAL_X_MULTIPLIER 2
+// result will in reality depend on your font
 
 #define BLOCK_BORDER 1
 #define BLOCK_SNAKE 2
 #define BLOCK_FRUIT 3
-
-/* TODO
- * Control issue? Seems to be hard to fix in ncurses
- * BUT if I figure it out I can maybe try to make tetris too
- */
+#define SCORE_COLOR 4
 
 auto main() -> int {
 
@@ -30,7 +26,7 @@ auto main() -> int {
   // note that from here on COLS, LINES are defined as the
   // line- and columncount of the term
 
-  // TODO Implement setting integer scale manually via CLI arg
+  // TODO Implement setting integer scale manually via CLI arg?
 
   // check if LINES/COLS are big enough for minimum dimensions
   if (LINES < HEIGHT + 3 || COLS < (WIDTH + 2) * GRAPHICAL_X_MULTIPLIER) {
@@ -41,22 +37,20 @@ auto main() -> int {
     std::exit(1);
   }
 
-  // dynamic sizing still does not work
-  // the above if statement ensures it won't launch if too small,
-  // but it can be big enough and yet you'll see nothing
+  // dynamic sizing (integer scaling)
   int width = COLS / WIDTH;
-  // + 1 to have space for score?
-  // TODO Maybe this is not the way? I want an extra line for score
-  int height = (LINES + 1) / HEIGHT;
+  // + 1 to have space for score, probably a better way to figure that
+  int height = LINES / (HEIGHT + 1);
   int screenSizeMultiple = std::min(width, height);
 
-  // ensure at least 1
+  // ensure screenSizeMultiple is at least 1
   screenSizeMultiple = (screenSizeMultiple == 0) ? 1 : screenSizeMultiple;
-  // screenSizeMultiple = 1; // DEBUG
   int y_multiple = screenSizeMultiple;
-  // x multiplied by two to try and make things as wide as they are tall
+  // we want the horizontal characters to be multiplied by a factor,
+  // in an attempt to even out the x and y axes
   int x_multiple = screenSizeMultiple * GRAPHICAL_X_MULTIPLIER;
 
+  // more ncurses init
   cbreak();
   noecho();
   keypad(stdscr, TRUE);
@@ -71,23 +65,15 @@ auto main() -> int {
   // border color
   init_pair(BLOCK_BORDER, COLOR_BLUE, COLOR_BLUE);
 
+  // score color
+  init_pair(SCORE_COLOR, COLOR_BLACK, COLOR_BLUE);
+
   // new dynamic window size
   // will be HEIGHT, or HEIGHT*2, or HEIGHT*3...
   int window_height = HEIGHT * y_multiple;
   // will be WIDTH*2, WIDTH*4, WIDTH*6...
   int window_width = WIDTH * x_multiple;
 
-  // check if LINES/COLS are big enough for scaled dimensions
-  if (LINES < window_height + 3 || COLS < (window_width + 2)) {
-    curs_set(1);
-    endwin();
-    std::cout << "Your terminal window is, somehow, too small.\n\
-				For your own sake, and mine, make it bigger.\n"
-              << "SCALING ERROR: LINES: " << LINES << ", COLS: " << COLS
-              << ", window_height: " << window_height
-              << ", window_width: " << window_width << std::endl;
-    std::exit(1);
-  }
   // approximate center of screen
   int startx = (COLS - window_width) / 2;
   int starty = (LINES - window_height) / 2;
@@ -98,6 +84,7 @@ auto main() -> int {
 
   refresh();
 
+  // draw border
   wattron(win, COLOR_PAIR(BLOCK_BORDER));
   box(win, 0, 0);
   wattroff(win, COLOR_PAIR(BLOCK_BORDER));
@@ -115,16 +102,23 @@ auto main() -> int {
 
     board.tick(ch);
 
+    // build score string
     std::string scoreLine = "Fruits eaten: ";
     scoreLine += std::to_string(board.getFruitsEaten());
     int scoreLen = scoreLine.length();
+    // convert to C string
     const char *score_c;
     score_c = scoreLine.c_str();
-    // we are only printing this string, can ignore warning since
-    // it doesn't come from user input, i think
-    mvprintw(starty - 1,
-             startx + window_width - scoreLen + GRAPHICAL_X_MULTIPLIER,
-             score_c);
+
+    // print score string in border
+    attron(COLOR_PAIR(SCORE_COLOR));
+    attron(A_BOLD);
+    mvprintw(starty,
+             startx + window_width + GRAPHICAL_X_MULTIPLIER - scoreLen - 1,
+             "%s", score_c);
+    attroff(COLOR_PAIR(SCORE_COLOR));
+    attroff(A_BOLD);
+    // treat string as argument to make it safe, according to lsp
 
     if (board.getHasLost()) {
       break;
@@ -132,6 +126,8 @@ auto main() -> int {
 
     // this nested for loop doesn't feel great
     // also maybe hard to read
+    // draw the internal coordinates to the screen,
+    // scaled accordingly
     for (int y = 1; y <= getmaxy(win) - 2; y += y_multiple) {
       // repeat y draw y_multiple times
       for (int i = 0; i < y_multiple; i++) {
