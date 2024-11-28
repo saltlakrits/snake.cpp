@@ -9,14 +9,93 @@
 #include <math.h>
 
 #include "snake.h"
-// empty tile = 0
-// snake head = 1
-// snake body = 2
-// fruit = 3
 
-#define K 1000 // for usleep
+/* On the board, 0 is an empty tile,
+ * 1 is the snake's head,
+ * 2 is the snake's body,
+ * 3 is the fruit.
+ */
 
 class Board {
+
+public:
+
+	Board(int boardWidth, int boardHeight) : snake(boardWidth/2, boardHeight/2) {
+		width = boardWidth;
+		height = boardHeight;
+		initializeBoard();
+
+		// pseudo random seed, for placing fruit
+		srand(time(NULL));
+		placeFruit();
+	}
+
+	void tick(char input) {
+		/* Call this method to make the game
+		 * progress one tick forward; which means
+		 * the snake will move one space forward,
+		 * and the GameBoard object will handle
+		 * everything else.
+		 *
+		 * For anything with static graphics
+		 * (pixel, simple tile based, etc) this
+		 * works wonders, and you simply sleep
+		 * before ticking again.
+		 *
+		 * For anything with smooth animations or
+		 * maybe sound playing, it would not work.
+		 */
+
+		// move snake
+		snake.move(input);
+		if (snake.collided_with_self()) {
+			hasLost = true;
+		}
+
+		// check if eating fruit
+		// generate a new fruit if needed
+		std::vector<int> head = snake.show()[0];
+
+		if (head == fruit) {
+			snake.eatFruit();
+			// sleeptime becomes 1% shorter.
+			// this is maybe too convervative...
+			sleepTime = std::floor(sleepTime * 0.99);
+			placeFruit();
+			fruitsEaten += 1;
+		}
+
+		// generate (clear) background
+		generateBoard();
+
+		// place snake
+		placeSnake();
+
+		// place fruit
+		setTile(fruit[0], fruit[1], 3);
+
+	}
+	bool get_hasLost() {
+		return hasLost;
+	}
+
+	int get_sleepTime() {
+		return sleepTime;
+	}
+
+	int get_fruitsEaten() {
+		return fruitsEaten;
+	}
+
+	int get_tile(int x, int y) {
+		return board[y][x];
+	}
+
+	int get_offsetTile(int x, int y) {
+		// offset for drawing, works in ncurses
+		return board[y - 1][x - 1];
+	}
+
 
 private:
 
@@ -25,21 +104,16 @@ private:
 	std::vector<std::vector<int>> board {};
 	Snake snake;
 	std::vector<int> fruit {};
-
-public:
-	int sleepTime = 100;
+	int fruitsEaten = 0;
 	bool hasLost = false;
+	int sleepTime = 100;
 
-
-	Board(int boardWidth, int boardHeight, int startX, int startY) : snake(startX, startY) {
-		width = boardWidth;
-		height = boardHeight;
-		initializeBoard();
-
-		// pseudo random seed, for placing fruit
-		srand(time(NULL));
-		placeFruit();
-
+	void generateBoard() {
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				board[y][x] = 0;
+			}
+		}
 	}
 
 	void initializeBoard() {
@@ -51,14 +125,9 @@ public:
 	}
 
 	void placeSnake() {
-		// insert logic to check if snake fits
-		// this is for drawing the snake. OBSOLETE RN.
-
-		// check if head is outside map (or collided with itself?) here?
 
 		std::vector<int> head = snake.show()[0];
-		// TODO: unless i have width-1 and height-1 i get a segfault -- is it wrong here,
-		// or elsewhere?
+
 		if (head[0] < 0 or head[0] == width or head[1] < 0 or head[1] == height) {
 			hasLost = true;
 		}
@@ -88,93 +157,9 @@ public:
 	}
 
 	void setTile(int x, int y, int z) {
-		// can do a fancy setter like this, but this should be private anyway
-		//if ((x >= 0) & (x < width) & (y >= 0) & (y < height)) {
-		//	board[y][x] = z;
-		//}
-		board[y][x] = z;
-	}
-
-	int getOffsetTile(int x, int y) {
-		// For use with drawBoard()
-		// coordinates are shifted!
-		return board[y - 1][x - 1];
-	}
-
-	void drawBoard() {
-		// OBSOLETE
-		for (int y = 0; y <= height + 1; y++) {
-			for (int x = 0; x <= width + 1; x++) {
-				// this is pretty ugly
-				if (y == 0) {
-					fmt::print("_");
-				}
-				else if (y == (height + 1)) {
-					fmt::print("¯");
-				}
-				else if (x == 0 or x == (width + 1)) {
-					fmt::print("|");
-				}
-				else if (getOffsetTile(x, y) == 0) {
-					fmt::print(" ");
-				}
-				else if (getOffsetTile(x, y) == 1) {
-					fmt::print("#");
-				}
-				else if (getOffsetTile(x, y) == 2) {
-					fmt::print("#");
-				}
-				else if (getOffsetTile(x, y) == 3) {
-					fmt::print("%");
-				}
-			}
-			fmt::print("\n");
+		if ((x >= 0) && (x < width) && (y >= 0) && (y < height)) {
+			board[y][x] = z;
 		}
 	}
-	void generateBoard() {
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				board[y][x] = 0;
-			}
-		}
-	}
-
-	std::vector<std::vector<int>> tick(char input) {
-		// a game tick
-
-		snake.setHeading(input);
-
-		// move snake
-		snake.move();
-		if (snake.collided_with_self()) {
-			hasLost = true;
-		}
-
-		// check if overlapping with fruit and eat it, setting hasEaten on snake or calling method
-		// generate a new fruit as well
-		std::vector<int> head = snake.show()[0];
-		if (head == fruit) {
-			snake.eatFruit();
-			sleepTime = std::floor(sleepTime * 0.99);
-			placeFruit();
-		}
-
-		// generate background
-		generateBoard();
-
-		// place snake
-		placeSnake();
-
-		// place fruit
-		setTile(fruit[0], fruit[1], 3);
-
-		// draw output
-		//drawBoard();
-
-		//usleep(sleepTime * K);
-
-		return board;
-	}
-
 };
 

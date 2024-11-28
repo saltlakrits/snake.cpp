@@ -1,107 +1,89 @@
-//#include <iostream>
-#include <fmt/core.h>
-// #include <chrono>
-// usleep: sleep for arg microseconds
 #include "board.h"
-// #include <tuple>
 #include <ncurses.h>
 #include <fmt/core.h>
-//#include <math.h>
 
 #define K 1000 // usleep works in microseconds, so multiplying by K gives milliseconds
 
-//void hideCursor() {
-//    std::cout << "\033[?25l" << std::flush; // Hide cursor
-//}
-//
-//void showCursor() {
-//    std::cout << "\033[?25h" << std::flush; // Show cursor
-//}
-
 #define WIDTH 40
 #define HEIGHT 20
+#define SNAKE_COLOR 1
+#define FRUIT_COLOR 2
+
+/* TODO
+ * Control issue? Seems to be hard to fix in ncurses
+ */
 
 int main() {
 
+	// initializing ncurses
 	initscr();
 	cbreak();
 	noecho();
 	keypad(stdscr, TRUE);
 	curs_set(0);
 	nodelay(stdscr, TRUE);
+	start_color();
 
-	/* TODO
-	 * Game boundaries/window box mismatched, you can
-	 * both go under the border and not close enough to
-	 * the border.
-	 * TODO
-	 * Background color? Might help with issue 1 as well.
-	 * TODO
-	 * Control issue?
-	 * TODO
-	 * You shouldn't be able to switch direction 180 degrees!
-	 */
-	// TODO Place window in the middle of the screen
-	WINDOW *win = newwin(HEIGHT + 1, WIDTH + 1, 0, 0);
+	// colorpairs for the snake and fruit
+	init_pair(SNAKE_COLOR, COLOR_GREEN, COLOR_BLACK);
+	init_pair(FRUIT_COLOR, COLOR_RED, COLOR_BLACK);
+
+	// approximate center of screen
+	int startx = (COLS - WIDTH)/2;
+	int starty = (LINES - HEIGHT)/2;
+
+	// create ncurses window
+	WINDOW *win = newwin(HEIGHT + 2, WIDTH + 2, starty, startx);
+
 	refresh();
-
-	// TODO Either this box is offset or something else is
-	// BORKED, but you can go hang out under the left and
-	// upper boundaries
 	box(win, 0, 0);
-	//mvwprintw(win, 1, 1, "TEST");
 	wrefresh(win);
 
-	int halfWidth = std::floor(WIDTH/2);
-	int halfHeight = std::floor(HEIGHT/2);
-	Board board{WIDTH, HEIGHT, halfWidth, halfHeight};
+	// init board, place snake in approximate middle
+	Board board{WIDTH, HEIGHT};
 	std::vector<std::vector<int>> game_board;
-
-	// unbuffered input
-//	std::cin.rdbuf()->pubsetbuf(nullptr, 0);
-//	std::cout.rdbuf()->pubsetbuf(nullptr, 0); // Disable buffering for std::cout
 
 	while (true) {
 
-		// TODO Pretty sure holding a key somehow blocks further
-		// input for a bit
+		// get user input
 		int ch;
 		ch = getch();
 
-		game_board = board.tick(ch);
+		board.tick(ch);
 
-		if (board.hasLost) {
+		if (board.get_hasLost()) {
 			break;
 		}
 
-		for (int y = 1; y < HEIGHT; y++) {
-			for (int x = 1; x < WIDTH; x++) {
-				// TODO Colored output? Background color?
-				// TODO Instead of redrawing the whole board constantly,
-				// maybe just have a tilesToDraw vector that we loop
-				// through and draw. Not sure if you need to manually
-				// clear the already drawn tiles each frame, though
-				if (game_board[y][x] == 0) {
-					mvwprintw(win, y, x, " ");
+		for (int y = 1; y <= HEIGHT; y++) {
+			for (int x = 1; x <= WIDTH; x++) {
+				if (board.get_offsetTile(x, y) == 0) {
+					mvwaddch(win, y, x, ' ');
 				}
-				else if (game_board[y][x] == 1) {
-					mvwprintw(win, y, x, "#");
+				else if (board.get_offsetTile(x, y) == 1) {
+					wattron(win, COLOR_PAIR(1));
+					mvwaddch(win, y, x, '#');
+					wattroff(win, COLOR_PAIR(1));
 				}
-				else if (game_board[y][x] == 2) {
-					mvwprintw(win, y, x, "#");
+				else if (board.get_offsetTile(x, y) == 2) {
+					wattron(win, COLOR_PAIR(1));
+					mvwaddch(win, y, x, '#');
+					wattroff(win, COLOR_PAIR(1));
 				}
-				else if (game_board[y][x] == 3) {
-					mvwprintw(win, y, x, "O");
+				else if (board.get_offsetTile(x, y) == 3) {
+					wattron(win, COLOR_PAIR(2));
+					mvwaddch(win, y, x, 'O');
+					wattroff(win, COLOR_PAIR(2));
 				}
 			}
 		}
 		wrefresh(win);
-		usleep(board.sleepTime * K);
+		usleep(board.get_sleepTime() * K);
 	}
 
 	curs_set(1);
 	endwin();
 
-	fmt::print("You lost :(\n\n");
+	fmt::print("\nYou lost :(\nYou ate {} fruit!\n\n", board.get_fruitsEaten());
 	return 0;
 }
