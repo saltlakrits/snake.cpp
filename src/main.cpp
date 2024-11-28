@@ -32,7 +32,8 @@ auto main() -> int {
 
 	// dynamic sizing calculation
 	int width = COLS % WIDTH;
-	int height = (LINES + 1) % HEIGHT;
+	// + 1 to have space for score?
+	int height = (LINES + 1) % HEIGHT; // TODO Maybe this is messing it all up?
 	//int screenSizeMultiple = std::min(width, height);
 	// this should reasonably never be needed
 	// screenSizeMultiple = (screenSizeMultiple == 0) ? 1 : screenSizeMultiple;
@@ -56,7 +57,7 @@ auto main() -> int {
 	init_pair(BLOCK_FRUIT, COLOR_BLACK, COLOR_RED);
 
 	// border color
-	init_pair(BLOCK_BORDER, COLOR_BLACK, COLOR_YELLOW);
+	init_pair(BLOCK_BORDER, COLOR_BLUE, COLOR_BLUE);
 
 	// new dynamic window size
 	int window_height = HEIGHT * y_multiple;
@@ -67,6 +68,7 @@ auto main() -> int {
 	int starty = (LINES - window_height)/2;
 
 	// create ncurses window
+	// +2 in both directions to make space for border
 	WINDOW *win = newwin(window_height + 2, window_width + 2, starty, startx);
 
 	refresh();
@@ -100,25 +102,25 @@ auto main() -> int {
 
 		// this nested for loop doesn't feel great
 		// also maybe hard to read
-		for (int y = 0; y < window_height; y += y_multiple) {
+		for (int y = 1; y <= getmaxy(win) - 2; y += y_multiple) {
 			// repeat y draw y_multiple times
 			for (int i = 0; i < y_multiple; i++) {
-				for (int x = 0; x < window_width; x += x_multiple) {
+				for (int x = 1; x <= getmaxx(win) - 2; x += x_multiple) {
 					// repeat x draw x_multiple times
 					for (int z = 0; z < x_multiple; z++) {
 						// drawing coords converted to internal game coords
 						int game_x = (x - 0)/x_multiple;
 						int game_y = (y - 0)/y_multiple;
 
-						if (board.getOffsetTile(game_x, game_y) == 0) {
+						if (board.getTile(game_x, game_y) == 0) {
 							mvwprintw(win, y + i,  x + z, " ");
 						}
-						else if (board.getOffsetTile(game_x, game_y) <= 2) {
+						else if (board.getTile(game_x, game_y) <= 2) {
 							wattron(win, COLOR_PAIR(BLOCK_SNAKE));
 							mvwprintw(win, y + i,  x + z, " ");
 							wattroff(win, COLOR_PAIR(BLOCK_SNAKE));
 						}
-						else if (board.getOffsetTile(game_x, game_y) == 3) {
+						else if (board.getTile(game_x, game_y) == 3) {
 							wattron(win, COLOR_PAIR(BLOCK_FRUIT));
 							mvwprintw(win, y + i,  x + z, " ");
 							wattroff(win, COLOR_PAIR(BLOCK_FRUIT));
@@ -128,6 +130,9 @@ auto main() -> int {
 				}
 			}
 		}
+		wattron(win, COLOR_PAIR(BLOCK_BORDER));
+		box(win, 0, 0);
+		wattroff(win, COLOR_PAIR(BLOCK_BORDER));
 		wrefresh(win);
 		usleep(board.getSleepTime() * K);
 	}

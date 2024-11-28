@@ -88,11 +88,6 @@ public:
 		return board[y][x];
 	}
 
-	auto getOffsetTile(int x, int y) -> int {
-		// offset for drawing, works in ncurses
-		return board[y - 1][x - 1];
-	}
-
 
 private:
 
