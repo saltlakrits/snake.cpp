@@ -41,7 +41,6 @@ int main() {
 
 	// init board, place snake in approximate middle
 	Board board{WIDTH, HEIGHT};
-	std::vector<std::vector<int>> game_board;
 
 	while (true) {
 
