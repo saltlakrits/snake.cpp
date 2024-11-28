@@ -84,7 +84,7 @@ public:
 		}
 	}
 
-	auto getPath() -> std::deque<std::vector<int>> {
+	 std::deque<std::vector<int>> getPath() {
 		// show private member HA HA
 
 		std::deque<std::vector<int>> path;
@@ -104,7 +104,7 @@ public:
 	}
 
 	auto collidedWithSelf() -> bool {
-		for (int i = 1; i < length(); i++) {
+		for (int i = 1; i < path.size(); i++) {
 			if (path[0] == path[i]) {
 				return true;
 			}

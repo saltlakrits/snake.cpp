@@ -1,6 +1,7 @@
 #include "board.h"
 #include <ncurses.h>
-#include <fmt/core.h>
+// #include <fmt/core.h>
+#include <iostream>
 #include <unistd.h>
 
 #define K 1000 // usleep works in microseconds, so multiplying by K gives milliseconds
@@ -9,9 +10,12 @@
 #define HEIGHT 20
 #define SNAKE_COLOR 1
 #define FRUIT_COLOR 2
+#define BLOCK_SNAKE 3
+#define BLOCK_FRUIT 4
 
 /* TODO
  * Control issue? Seems to be hard to fix in ncurses
+ * BUT if I figure it out I can maybe try to make tetris too
  */
 
 auto main() -> int {
@@ -19,11 +23,17 @@ auto main() -> int {
 	// initializing ncurses
 	initscr();
 
-	if (LINES < HEIGHT || COLS < WIDTH) {
-		fmt::print("Your terminal window is, somehow, too small.\n\
-				For your own sake, and mine, make it bigger.");
-		std::exit(1);
-	}
+	// if (LINES < HEIGHT || COLS < WIDTH) {
+	// 	std::cout << "Your terminal window is, somehow, too small.\n\
+	// 			For your own sake, and mine, make it bigger." << std::endl;
+	// 	std::exit(1);
+	// }
+
+	// dynamic sizing calculation
+	// int width = COLS % WIDTH;
+	// int height = (LINES + 1) % HEIGHT;
+	// int screenSizeMultiple = std::min(width, height);
+	// screenSizeMultiple = 1 ? (screenSizeMultiple == 0) : screenSizeMultiple;
 
 	cbreak();
 	noecho();
@@ -35,6 +45,20 @@ auto main() -> int {
 	// colorpairs for the snake and fruit
 	init_pair(SNAKE_COLOR, COLOR_GREEN, COLOR_BLACK);
 	init_pair(FRUIT_COLOR, COLOR_RED, COLOR_BLACK);
+
+	// block chars
+	init_pair(BLOCK_SNAKE, COLOR_BLACK, COLOR_GREEN);
+	init_pair(BLOCK_FRUIT, COLOR_BLACK, COLOR_RED);
+
+	// strings to print
+	// std::string snake_string (screenSizeMultiple, ' ');
+	// std::string fruit_string (screenSizeMultiple, ' ');
+	// const char* snake_c = snake_string.c_str();
+	// const char* fruit_c = fruit_string.c_str();
+
+	// new dynamic window size
+	// int window_height = HEIGHT * screenSizeMultiple;
+	// int window_width = WIDTH * screenSizeMultiple;
 
 	// approximate center of screen
 	int startx = (COLS - WIDTH)/2;
@@ -63,24 +87,21 @@ auto main() -> int {
 		}
 
 		for (int y = 1; y <= HEIGHT; y++) {
-			for (int x = 1; x <= WIDTH; x++) {
-				if (board.getOffsetTile(x, y) == 0) {
-					mvwaddch(win, y, x, ' ');
-				}
-				else if (board.getOffsetTile(x, y) == 1) {
-					wattron(win, COLOR_PAIR(1));
-					mvwaddch(win, y, x, '#');
-					wattroff(win, COLOR_PAIR(1));
-				}
-				else if (board.getOffsetTile(x, y) == 2) {
-					wattron(win, COLOR_PAIR(1));
-					mvwaddch(win, y, x, '#');
-					wattroff(win, COLOR_PAIR(1));
-				}
-				else if (board.getOffsetTile(x, y) == 3) {
-					wattron(win, COLOR_PAIR(2));
-					mvwaddch(win, y, x, 'O');
-					wattroff(win, COLOR_PAIR(2));
+			for (int i = 0; i < 1; i++) {
+				for (int x = 1; x <= WIDTH; x++) {
+					if (board.getOffsetTile(x, y) == 0) {
+						mvwprintw(win, y + i, x, " ");
+					}
+					else if (board.getOffsetTile(x, y) == 1 || board.getOffsetTile(x, y) == 2) {
+						wattron(win, COLOR_PAIR(3));
+						mvwprintw(win, y + i, x, " ");
+						wattroff(win, COLOR_PAIR(3));
+					}
+					else if (board.getOffsetTile(x, y) == 3) {
+						wattron(win, COLOR_PAIR(4));
+						mvwprintw(win, y + i, x, " ");
+						wattroff(win, COLOR_PAIR(4));
+					}
 				}
 			}
 		}
@@ -91,6 +112,6 @@ auto main() -> int {
 	curs_set(1);
 	endwin();
 
-	fmt::print("\nYou lost :(\nYou ate {} fruit!\n\n", board.getFruitsEaten());
+	//std::cout << "\nYou lost :(\nYou ate " << board.getFruitsEaten() << " fruit!\n\n" << std::endl;
 	return 0;
 }

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <vector>
-#include <fmt/core.h>
+#include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 #include "snake.h"
 
@@ -153,7 +154,10 @@ private:
 	}
 
 	void setTile(int x, int y, int z) {
-		if ((x >= 0) && (x < width) && (y >= 0) && (y < height)) {
+		// if ((x >= 0) && (x < width) && (y >= 0) && (y < height)) {
+		// 	board[y][x] = z;
+		// }
+		if ((0 <= x < width) && (0 <= y < height)){
 			board[y][x] = z;
 		}
 	}
