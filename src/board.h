@@ -121,19 +121,29 @@ private:
   }
 
   void placeFruit() {
-    // Randomly place a fruit
-    int random_x = rand() % width;
-    int random_y = rand() % height;
+    while (true) {
 
-    std::vector<int> new_fruit = {random_x, random_y};
-    std::deque<std::vector<int>> path = snake.getPath();
+      // Randomly place a fruit
+      int random_x = rand() % width;
+      int random_y = rand() % height;
 
-    for (int i = 0; i < snake.length(); i++) {
-      if (path[i] == new_fruit) {
-        placeFruit();
+      std::vector<int> new_fruit = {random_x, random_y};
+      std::deque<std::vector<int>> path = snake.getPath();
+
+      bool collides = false;
+
+      // check if it overlaps with snake
+      for (int i = 0; i < snake.length(); i++) {
+        if (path[i] == new_fruit) {
+          // if it does, we generate new coords and try again
+          collides = true;
+        }
+      }
+      if (!collides) {
+        fruit = new_fruit;
+        break;
       }
     }
-    fruit = new_fruit;
   }
 
   void setTile(int x, int y, int z) {

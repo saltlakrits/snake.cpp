@@ -3,16 +3,17 @@
 // #include <fmt/core.h>
 #include <iostream>
 #include <unistd.h>
-
-#define K                                                                      \
-  1000 // usleep works in microseconds, so multiplying by K gives milliseconds
+//
+// usleep works in microseconds, so multiplying by K gives milliseconds
+#define K 1000
 
 #define WIDTH 40
 #define HEIGHT 20
 
+// how many times wider will we draw the
+// horizontal chars than the vertical
 #define GRAPHICAL_X_MULTIPLIER 2
-// #define SNAKE_COLOR 1
-// #define FRUIT_COLOR 2
+
 #define BLOCK_BORDER 1
 #define BLOCK_SNAKE 2
 #define BLOCK_FRUIT 3
@@ -27,7 +28,7 @@ auto main() -> int {
   // initializing ncurses
   initscr();
 
-  if (LINES < HEIGHT || COLS < WIDTH) {
+  if (LINES < HEIGHT || COLS < WIDTH * GRAPHICAL_X_MULTIPLIER) {
     std::cout << "Your terminal window is, somehow, too small.\n\
 				For your own sake, and mine, make it bigger."
               << std::endl;
@@ -60,9 +61,10 @@ auto main() -> int {
   init_pair(BLOCK_BORDER, COLOR_BLUE, COLOR_BLUE);
 
   // new dynamic window size
-  int window_height =
-      HEIGHT * y_multiple; // will be HEIGHT, or HEIGHT*2, or HEIGHT*3...
-  int window_width = WIDTH * x_multiple; // will be WIDTH*2, WIDTH*4, WIDTH*6...
+  // will be HEIGHT, or HEIGHT*2, or HEIGHT*3...
+  int window_height = HEIGHT * y_multiple;
+  // will be WIDTH*2, WIDTH*4, WIDTH*6...
+  int window_width = WIDTH * x_multiple;
 
   // approximate center of screen
   int startx = (COLS - window_width) / 2;
@@ -89,6 +91,15 @@ auto main() -> int {
     ch = getch();
 
     board.tick(ch);
+
+    std::string scoreLine = "Fruits eaten: ";
+    scoreLine += std::to_string(board.getFruitsEaten());
+    int scoreLen = scoreLine.length();
+    const char *score_c;
+    score_c = scoreLine.c_str();
+    // we are only printing this string, can ignore warning since
+    // it doesn't come from user input, i think
+    mvprintw(starty - 1, startx + window_width - scoreLen + GRAPHICAL_X_MULTIPLIER, score_c);
 
     if (board.getHasLost()) {
       break;
