@@ -124,7 +124,7 @@ private:
 
 		std::vector<int> head = snake.show()[0];
 
-		if (head[0] < 0 or head[0] == width or head[1] < 0 or head[1] == height) {
+		if (head[0] < 0 || head[0] == width || head[1] < 0 || head[1] == height) {
 			hasLost = true;
 		}
 		else {
