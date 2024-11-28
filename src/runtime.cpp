@@ -18,6 +18,13 @@ auto main() -> int {
 
 	// initializing ncurses
 	initscr();
+
+	if (LINES < HEIGHT || COLS < WIDTH) {
+		fmt::print("Your terminal window is, somehow, too small.\n\
+				For your own sake, and mine, make it bigger.");
+		std::exit(1);
+	}
+
 	cbreak();
 	noecho();
 	keypad(stdscr, TRUE);
