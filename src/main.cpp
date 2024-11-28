@@ -8,10 +8,11 @@
 
 #define WIDTH 40
 #define HEIGHT 20
-#define SNAKE_COLOR 1
-#define FRUIT_COLOR 2
-#define BLOCK_SNAKE 3
-#define BLOCK_FRUIT 4
+//#define SNAKE_COLOR 1
+//#define FRUIT_COLOR 2
+#define BLOCK_BORDER 1
+#define BLOCK_SNAKE 2
+#define BLOCK_FRUIT 3
 
 /* TODO
  * Control issue? Seems to be hard to fix in ncurses
@@ -32,9 +33,12 @@ auto main() -> int {
 	// dynamic sizing calculation
 	int width = COLS % WIDTH;
 	int height = (LINES + 1) % HEIGHT;
-	int screenSizeMultiple = std::min(width, height);
-	screenSizeMultiple = (screenSizeMultiple == 0) ? 1 : screenSizeMultiple;
-	screenSizeMultiple = 2; // only for debug
+	//int screenSizeMultiple = std::min(width, height);
+	// this should reasonably never be needed
+	// screenSizeMultiple = (screenSizeMultiple == 0) ? 1 : screenSizeMultiple;
+	//screenSizeMultiple = 2; // only for debug, ensure that we can scale it to double size before doing anything fancier
+	int y_multiple = 2;
+	int x_multiple = 2 * 2;
 
 	cbreak();
 	noecho();
@@ -44,22 +48,19 @@ auto main() -> int {
 	start_color();
 
 	// colorpairs for the snake and fruit
-	init_pair(SNAKE_COLOR, COLOR_GREEN, COLOR_BLACK);
-	init_pair(FRUIT_COLOR, COLOR_RED, COLOR_BLACK);
+	// init_pair(SNAKE_COLOR, COLOR_GREEN, COLOR_BLACK);
+	// init_pair(FRUIT_COLOR, COLOR_RED, COLOR_BLACK);
 
-	// block chars
+	// block char pairs, snake and fruit should be spaces
 	init_pair(BLOCK_SNAKE, COLOR_BLACK, COLOR_GREEN);
 	init_pair(BLOCK_FRUIT, COLOR_BLACK, COLOR_RED);
 
-	// strings to print
-	std::string snake_string (screenSizeMultiple, ' ');
-	std::string fruit_string (screenSizeMultiple, ' ');
-	const char* snake_c = snake_string.c_str();
-	const char* fruit_c = fruit_string.c_str();
+	// border color
+	init_pair(BLOCK_BORDER, COLOR_BLACK, COLOR_YELLOW);
 
 	// new dynamic window size
-	int window_height = HEIGHT * screenSizeMultiple;
-	int window_width = WIDTH * screenSizeMultiple;
+	int window_height = HEIGHT * y_multiple;
+	int window_width = WIDTH * x_multiple;
 
 	// approximate center of screen
 	int startx = (COLS - window_width)/2;
@@ -69,10 +70,13 @@ auto main() -> int {
 	WINDOW *win = newwin(window_height + 2, window_width + 2, starty, startx);
 
 	refresh();
+
+	wattron(win, COLOR_PAIR(BLOCK_BORDER));
 	box(win, 0, 0);
+	wattroff(win, COLOR_PAIR(BLOCK_BORDER));
 	wrefresh(win);
 
-	// init board, place snake in approximate middle
+	// init board
 	Board board{WIDTH, HEIGHT};
 
 	while (true) {
@@ -87,22 +91,40 @@ auto main() -> int {
 			break;
 		}
 
-		for (int y = 1; y <= HEIGHT; y++) {
-			for (int i = 0; i < screenSizeMultiple; i++) {
-				for (int x = 1; x <= WIDTH; x++) {
-					if (board.getOffsetTile(x, y) == 0) {
-						mvwprintw(win, y + i, x, "  ");
+		// my dynamic sizing doesn't work. maybe it's easier to scale the internal
+		// representation.
+
+		// TODO: x should be "graphically scaled" more than y, to compensate for the fact
+		// that most fonts are taller than they are wide. it's probably never going to be
+		// perfect, though.
+
+		// this nested for loop doesn't feel great
+		// also maybe hard to read
+		for (int y = 0; y < window_height; y += y_multiple) {
+			// repeat y draw y_multiple times
+			for (int i = 0; i < y_multiple; i++) {
+				for (int x = 0; x < window_width; x += x_multiple) {
+					// repeat x draw x_multiple times
+					for (int z = 0; z < x_multiple; z++) {
+						// drawing coords converted to internal game coords
+						int game_x = (x - 0)/x_multiple;
+						int game_y = (y - 0)/y_multiple;
+
+						if (board.getOffsetTile(game_x, game_y) == 0) {
+							mvwprintw(win, y + i,  x + z, " ");
+						}
+						else if (board.getOffsetTile(game_x, game_y) <= 2) {
+							wattron(win, COLOR_PAIR(BLOCK_SNAKE));
+							mvwprintw(win, y + i,  x + z, " ");
+							wattroff(win, COLOR_PAIR(BLOCK_SNAKE));
+						}
+						else if (board.getOffsetTile(game_x, game_y) == 3) {
+							wattron(win, COLOR_PAIR(BLOCK_FRUIT));
+							mvwprintw(win, y + i,  x + z, " ");
+							wattroff(win, COLOR_PAIR(BLOCK_FRUIT));
+						}
 					}
-					else if (board.getOffsetTile(x, y) == 1 || board.getOffsetTile(x, y) == 2) {
-						wattron(win, COLOR_PAIR(1));
-						mvwprintw(win, y + i, x, "##");
-						wattroff(win, COLOR_PAIR(1));
-					}
-					else if (board.getOffsetTile(x, y) == 3) {
-						wattron(win, COLOR_PAIR(2));
-						mvwprintw(win, y + i, x, "OO");
-						wattroff(win, COLOR_PAIR(2));
-					}
+
 				}
 			}
 		}
