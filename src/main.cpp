@@ -23,17 +23,18 @@ auto main() -> int {
 	// initializing ncurses
 	initscr();
 
-	// if (LINES < HEIGHT || COLS < WIDTH) {
-	// 	std::cout << "Your terminal window is, somehow, too small.\n\
-	// 			For your own sake, and mine, make it bigger." << std::endl;
-	// 	std::exit(1);
-	// }
+	if (LINES < HEIGHT || COLS < WIDTH) {
+		std::cout << "Your terminal window is, somehow, too small.\n\
+				For your own sake, and mine, make it bigger." << std::endl;
+		std::exit(1);
+	}
 
 	// dynamic sizing calculation
-	// int width = COLS % WIDTH;
-	// int height = (LINES + 1) % HEIGHT;
-	// int screenSizeMultiple = std::min(width, height);
-	// screenSizeMultiple = 1 ? (screenSizeMultiple == 0) : screenSizeMultiple;
+	int width = COLS % WIDTH;
+	int height = (LINES + 1) % HEIGHT;
+	int screenSizeMultiple = std::min(width, height);
+	screenSizeMultiple = (screenSizeMultiple == 0) ? 1 : screenSizeMultiple;
+	screenSizeMultiple = 2; // only for debug
 
 	cbreak();
 	noecho();
@@ -51,21 +52,21 @@ auto main() -> int {
 	init_pair(BLOCK_FRUIT, COLOR_BLACK, COLOR_RED);
 
 	// strings to print
-	// std::string snake_string (screenSizeMultiple, ' ');
-	// std::string fruit_string (screenSizeMultiple, ' ');
-	// const char* snake_c = snake_string.c_str();
-	// const char* fruit_c = fruit_string.c_str();
+	std::string snake_string (screenSizeMultiple, ' ');
+	std::string fruit_string (screenSizeMultiple, ' ');
+	const char* snake_c = snake_string.c_str();
+	const char* fruit_c = fruit_string.c_str();
 
 	// new dynamic window size
-	// int window_height = HEIGHT * screenSizeMultiple;
-	// int window_width = WIDTH * screenSizeMultiple;
+	int window_height = HEIGHT * screenSizeMultiple;
+	int window_width = WIDTH * screenSizeMultiple;
 
 	// approximate center of screen
-	int startx = (COLS - WIDTH)/2;
-	int starty = (LINES - HEIGHT)/2;
+	int startx = (COLS - window_width)/2;
+	int starty = (LINES - window_height)/2;
 
 	// create ncurses window
-	WINDOW *win = newwin(HEIGHT + 2, WIDTH + 2, starty, startx);
+	WINDOW *win = newwin(window_height + 2, window_width + 2, starty, startx);
 
 	refresh();
 	box(win, 0, 0);
@@ -87,20 +88,20 @@ auto main() -> int {
 		}
 
 		for (int y = 1; y <= HEIGHT; y++) {
-			for (int i = 0; i < 1; i++) {
+			for (int i = 0; i < screenSizeMultiple; i++) {
 				for (int x = 1; x <= WIDTH; x++) {
 					if (board.getOffsetTile(x, y) == 0) {
-						mvwprintw(win, y + i, x, " ");
+						mvwprintw(win, y + i, x, "  ");
 					}
 					else if (board.getOffsetTile(x, y) == 1 || board.getOffsetTile(x, y) == 2) {
-						wattron(win, COLOR_PAIR(3));
-						mvwprintw(win, y + i, x, " ");
-						wattroff(win, COLOR_PAIR(3));
+						wattron(win, COLOR_PAIR(1));
+						mvwprintw(win, y + i, x, "##");
+						wattroff(win, COLOR_PAIR(1));
 					}
 					else if (board.getOffsetTile(x, y) == 3) {
-						wattron(win, COLOR_PAIR(4));
-						mvwprintw(win, y + i, x, " ");
-						wattroff(win, COLOR_PAIR(4));
+						wattron(win, COLOR_PAIR(2));
+						mvwprintw(win, y + i, x, "OO");
+						wattroff(win, COLOR_PAIR(2));
 					}
 				}
 			}
@@ -112,6 +113,6 @@ auto main() -> int {
 	curs_set(1);
 	endwin();
 
-	//std::cout << "\nYou lost :(\nYou ate " << board.getFruitsEaten() << " fruit!\n\n" << std::endl;
+	std::cout << "\nYou lost :(\nYou ate " << board.getFruitsEaten() << " fruit!\n\n" << std::endl;
 	return 0;
 }
