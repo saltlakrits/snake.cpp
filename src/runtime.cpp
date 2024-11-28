@@ -13,7 +13,7 @@
  * Control issue? Seems to be hard to fix in ncurses
  */
 
-int main() {
+auto main() -> int {
 
 	// initializing ncurses
 	initscr();

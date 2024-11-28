@@ -75,23 +75,23 @@ public:
 		setTile(fruit[0], fruit[1], 3);
 
 	}
-	bool get_hasLost() {
+	auto get_hasLost() -> bool {
 		return hasLost;
 	}
 
-	int get_sleepTime() {
+	auto get_sleepTime() -> int {
 		return sleepTime;
 	}
 
-	int get_fruitsEaten() {
+	auto get_fruitsEaten() -> int {
 		return fruitsEaten;
 	}
 
-	int get_tile(int x, int y) {
+	auto get_tile(int x, int y) -> int {
 		return board[y][x];
 	}
 
-	int get_offsetTile(int x, int y) {
+	auto get_offsetTile(int x, int y) -> int {
 		// offset for drawing, works in ncurses
 		return board[y - 1][x - 1];
 	}
@@ -134,7 +134,7 @@ private:
 		else {
 			setTile(head[0], head[1], 1);
 
-			for (int i = 1; i < snake.size(); i++) {
+			for (int i = 1; i < snake.length(); i++) {
 				setTile(snake.show()[i][0], snake.show()[i][1], 2);
 			}
 		}
@@ -148,7 +148,7 @@ private:
 		std::vector<int> new_fruit = {random_x, random_y};
 		std::deque<std::vector<int>> path = snake.show();
 
-		for (int i = 0; i < snake.size(); i++) {
+		for (int i = 0; i < snake.length(); i++) {
 			if (path[i] == new_fruit) {
 				placeFruit();
 			}

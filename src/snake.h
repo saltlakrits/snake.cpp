@@ -84,7 +84,7 @@ public:
 		}
 	}
 
-	std::deque<std::vector<int>> show() {
+	auto show() -> std::deque<std::vector<int>> {
 		// show private member
 
 		std::deque<std::vector<int>> path;
@@ -98,14 +98,14 @@ public:
 		return path;
 	}
 
-	size_t size() {
+	auto length() -> size_t {
 		// show private member size, maybe unnecessary as can do snake.show().size() ?
 		// just convenient
 		return snakePath.size();
 	}
 
-	bool collided_with_self() {
-		for (int i = 1; i < size(); i++) {
+	auto collided_with_self() -> bool {
+		for (int i = 1; i < length(); i++) {
 			if (snakePath[0] == snakePath[i]) {
 				return true;
 			}
