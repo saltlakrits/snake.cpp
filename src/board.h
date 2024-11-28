@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
+#include <math.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h>
+#include <vector>
 
 #include "snake.h"
 
@@ -16,145 +16,132 @@
 class Board {
 
 public:
+  Board(int boardWidth, int boardHeight)
+      : snake(boardWidth / 2, boardHeight / 2) {
+    width = boardWidth;
+    height = boardHeight;
+    initializeBoard();
 
-	Board(int boardWidth, int boardHeight) : snake(boardWidth/2, boardHeight/2) {
-		width = boardWidth;
-		height = boardHeight;
-		initializeBoard();
+    // pseudo random seed, for placing fruit
+    srand(time(NULL));
+    placeFruit();
+  }
 
-		// pseudo random seed, for placing fruit
-		srand(time(NULL));
-		placeFruit();
-	}
+  void tick(char input) {
+    /* Call this method to make the game
+     * progress one tick forward; which means
+     * the snake will move one space forward,
+     * and the GameBoard object will handle
+     * everything else.
+     *
+     * For anything with static graphics
+     * (pixel, simple tile based, etc) this
+     * works wonders, and you simply sleep
+     * before ticking again.
+     *
+     * For anything with smooth animations or
+     * maybe sound playing, it would not work.
+     */
 
-	void tick(char input) {
-		/* Call this method to make the game
-		 * progress one tick forward; which means
-		 * the snake will move one space forward,
-		 * and the GameBoard object will handle
-		 * everything else.
-		 *
-		 * For anything with static graphics
-		 * (pixel, simple tile based, etc) this
-		 * works wonders, and you simply sleep
-		 * before ticking again.
-		 *
-		 * For anything with smooth animations or
-		 * maybe sound playing, it would not work.
-		 */
+    // move snake
+    snake.move(input);
+    if (snake.collidedWithSelf()) {
+      hasLost = true;
+    }
 
-		// move snake
-		snake.move(input);
-		if (snake.collidedWithSelf()) {
-			hasLost = true;
-		}
+    // check if eating fruit
+    // generate a new fruit if needed
+    std::vector<int> head = snake.getPath()[0];
 
-		// check if eating fruit
-		// generate a new fruit if needed
-		std::vector<int> head = snake.getPath()[0];
+    if (head == fruit) {
+      snake.eatFruit();
+      // sleeptime becomes 1% shorter.
+      // this is maybe too convervative...
+      sleepTime = std::floor(sleepTime * 0.99);
+      placeFruit();
+      fruitsEaten += 1;
+    }
 
-		if (head == fruit) {
-			snake.eatFruit();
-			// sleeptime becomes 1% shorter.
-			// this is maybe too convervative...
-			sleepTime = std::floor(sleepTime * 0.99);
-			placeFruit();
-			fruitsEaten += 1;
-		}
+    // generate (clear) background
+    generateBoard();
 
-		// generate (clear) background
-		generateBoard();
+    // place snake
+    placeSnake();
 
-		// place snake
-		placeSnake();
+    // place fruit
+    setTile(fruit[0], fruit[1], 3);
+  }
+  auto getHasLost() -> bool { return hasLost; }
 
-		// place fruit
-		setTile(fruit[0], fruit[1], 3);
+  auto getSleepTime() -> int { return sleepTime; }
 
-	}
-	auto getHasLost() -> bool {
-		return hasLost;
-	}
+  auto getFruitsEaten() -> int { return fruitsEaten; }
 
-	auto getSleepTime() -> int {
-		return sleepTime;
-	}
-
-	auto getFruitsEaten() -> int {
-		return fruitsEaten;
-	}
-
-	auto getTile(int x, int y) -> int {
-		return board[y][x];
-	}
-
+  auto getTile(int x, int y) -> int { return board[y][x]; }
 
 private:
+  int width{};
+  int height{};
+  std::vector<std::vector<int>> board{};
+  Snake snake;
+  std::vector<int> fruit{};
+  int fruitsEaten = 0;
+  bool hasLost = false;
+  int sleepTime = 100;
 
-	int width {};
-	int height {};
-	std::vector<std::vector<int>> board {};
-	Snake snake;
-	std::vector<int> fruit {};
-	int fruitsEaten = 0;
-	bool hasLost = false;
-	int sleepTime = 100;
+  void generateBoard() {
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        board[y][x] = 0;
+      }
+    }
+  }
 
-	void generateBoard() {
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				board[y][x] = 0;
-			}
-		}
-	}
+  void initializeBoard() {
+    // Generate empty board
+    for (int y = 0; y < height; y++) {
+      board.resize(height);
+      board[y].resize(width, 0);
+    }
+  }
 
-	void initializeBoard() {
-		// Generate empty board
-		for (int y = 0; y < height; y++) {
-			board.resize(height);
-			board[y].resize(width, 0);
-		}
-	}
+  void placeSnake() {
 
-	void placeSnake() {
+    std::vector<int> head = snake.getPath()[0];
 
-		std::vector<int> head = snake.getPath()[0];
+    if (head[0] < 0 || head[0] == width || head[1] < 0 || head[1] == height) {
+      hasLost = true;
+    } else {
+      setTile(head[0], head[1], 1);
 
-		if (head[0] < 0 || head[0] == width || head[1] < 0 || head[1] == height) {
-			hasLost = true;
-		}
-		else {
-			setTile(head[0], head[1], 1);
+      for (int i = 1; i < snake.length(); i++) {
+        setTile(snake.getPath()[i][0], snake.getPath()[i][1], 2);
+      }
+    }
+  }
 
-			for (int i = 1; i < snake.length(); i++) {
-				setTile(snake.getPath()[i][0], snake.getPath()[i][1], 2);
-			}
-		}
-	}
+  void placeFruit() {
+    // Randomly place a fruit
+    int random_x = rand() % width;
+    int random_y = rand() % height;
 
-	void placeFruit() {
-		// Randomly place a fruit
-		int random_x = rand() % width;
-		int random_y = rand() % height;
+    std::vector<int> new_fruit = {random_x, random_y};
+    std::deque<std::vector<int>> path = snake.getPath();
 
-		std::vector<int> new_fruit = {random_x, random_y};
-		std::deque<std::vector<int>> path = snake.getPath();
+    for (int i = 0; i < snake.length(); i++) {
+      if (path[i] == new_fruit) {
+        placeFruit();
+      }
+    }
+    fruit = new_fruit;
+  }
 
-		for (int i = 0; i < snake.length(); i++) {
-			if (path[i] == new_fruit) {
-				placeFruit();
-			}
-		}
-		fruit = new_fruit;
-	}
-
-	void setTile(int x, int y, int z) {
-		// if ((x >= 0) && (x < width) && (y >= 0) && (y < height)) {
-		// 	board[y][x] = z;
-		// }
-		if ((0 <= x < width) && (0 <= y < height)){
-			board[y][x] = z;
-		}
-	}
+  void setTile(int x, int y, int z) {
+    // if ((x >= 0) && (x < width) && (y >= 0) && (y < height)) {
+    // 	board[y][x] = z;
+    // }
+    if ((0 <= x < width) && (0 <= y < height)) {
+      board[y][x] = z;
+    }
+  }
 };
-
