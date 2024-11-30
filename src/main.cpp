@@ -25,7 +25,7 @@ void mvwCharBlock(WINDOW *win, const char *s, int color, int y_mult,
   /* Prints a C-string (which should already be the correct length) to a given
    * coordinate. Will then repeat the same print for y_multiple lines below.
    * Given a string of length n, will effectively print a y_mult height block
-   * of chars at the given coordinate (starting coordinate at top-left of
+   * of n chars at the given coordinate (starting coordinate at top-left of
    * block).
    */
   for (int i = 0; i < y_mult; i++) {
