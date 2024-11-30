@@ -1,7 +1,8 @@
-#include "board.h"
 #include <iostream>
-#include <ncurses.h>
 #include <unistd.h>
+
+#include "board.h"
+#include "main.h"
 
 // usleep works in microseconds, so multiplying by K gives milliseconds
 #define K 1000
@@ -19,7 +20,22 @@
 #define BLOCK_FRUIT 3
 #define SCORE_COLOR 4
 
-auto main() -> int {
+void mvwCharBlock(WINDOW *win, const char *s, int color, int y_mult,
+                  int x_coord, int y_coord) {
+  /* Prints a C-string (which should already be the correct length) to a given
+   * coordinate. Will then repeat the same print for y_multiple lines below.
+   * Given a string of length n, will effectively print a y_mult height block
+   * of chars at the given coordinate (starting coordinate at top-left of
+   * block).
+   */
+  for (int i = 0; i < y_mult; i++) {
+    wattron(win, COLOR_PAIR(color));
+    mvwprintw(win, y_coord + i, x_coord, "%s", s);
+    wattroff(win, COLOR_PAIR(color));
+  }
+}
+
+int main() {
 
   // initializing ncurses
   initscr();
@@ -74,6 +90,10 @@ auto main() -> int {
   // will be WIDTH*2, WIDTH*4, WIDTH*6...
   int window_width = WIDTH * x_multiple;
 
+  // create horizontal string to print
+  std::string s = std::string(x_multiple, ' ');
+  const char *s_c = s.c_str();
+
   // approximate center of screen
   int startx = (COLS - window_width) / 2;
   int starty = (LINES - window_height) / 2;
@@ -124,36 +144,30 @@ auto main() -> int {
       break;
     }
 
-    // this nested for loop doesn't feel great
-    // also maybe hard to read
     // draw the internal coordinates to the screen,
     // scaled accordingly
     for (int y = 1; y <= getmaxy(win) - 2; y += y_multiple) {
-      // repeat y draw y_multiple times
-      for (int i = 0; i < y_multiple; i++) {
-        for (int x = 1; x <= getmaxx(win) - 2; x += x_multiple) {
-          // repeat x draw x_multiple times
-          for (int z = 0; z < x_multiple; z++) {
-            // drawing coords converted to internal game coords
-            int game_x = (x - 1) / x_multiple;
-            int game_y = (y - 1) / y_multiple;
 
-            if (board.getTile(game_x, game_y) == 0) {
-              mvwprintw(win, y + i, x + z, " ");
-            } else if (board.getTile(game_x, game_y) <= 2) {
-              wattron(win, COLOR_PAIR(BLOCK_SNAKE));
-              mvwprintw(win, y + i, x + z, " ");
-              wattroff(win, COLOR_PAIR(BLOCK_SNAKE));
-            } else if (board.getTile(game_x, game_y) == 3) {
-              wattron(win, COLOR_PAIR(BLOCK_FRUIT));
-              mvwprintw(win, y + i, x + z, " ");
-              wattroff(win, COLOR_PAIR(BLOCK_FRUIT));
-            }
-          }
+      // convert ncurses_y_coord to game_y_coor
+      int game_y = (y - 1) / y_multiple;
+
+      for (int x = 1; x <= getmaxx(win) - 2; x += x_multiple) {
+
+        // convert ncurses_x_coord to game_x_coord
+        int game_x = (x - 1) / x_multiple;
+
+        switch (board.getTile(game_x, game_y)) {
+        case 0:
+          mvwCharBlock(win, s_c, -1, y_multiple, x, y);
+          break;
+        case 3:
+          mvwCharBlock(win, s_c, BLOCK_FRUIT, y_multiple, x, y);
+          break;
+        default:
+          mvwCharBlock(win, s_c, BLOCK_SNAKE, y_multiple, x, y);
         }
       }
     }
-
     wrefresh(win);
     usleep(board.getSleepTime() * K);
   }
