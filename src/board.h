@@ -51,7 +51,7 @@ public:
 
     // check if eating fruit
     // generate a new fruit if needed
-    std::vector<int> head = snake.getPath()[0];
+    const std::vector<int>& head = snake.getPath()[0];
 
     if (head == fruit) {
       snake.eatFruit();
@@ -107,7 +107,7 @@ private:
 
   void placeSnake() {
 
-    std::vector<int> head = snake.getPath()[0];
+    const std::vector<int>& head = snake.getPath()[0];
 
     if (head[0] < 0 || head[0] == width || head[1] < 0 || head[1] == height) {
       hasLost = true;
@@ -128,7 +128,7 @@ private:
       int random_y = rand() % height;
 
       std::vector<int> new_fruit = {random_x, random_y};
-      std::deque<std::vector<int>> path = snake.getPath();
+      const std::deque<std::vector<int>>& path = snake.getPath();
 
       bool collides = false;
 

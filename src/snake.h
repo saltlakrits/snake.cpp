@@ -53,17 +53,7 @@ public:
     }
   }
 
-  std::deque<std::vector<int>> getPath() {
-
-    std::deque<std::vector<int>> path_copy;
-
-    for (int x = 0; x < path.size(); x++) {
-      std::vector<int> inner_vec;
-      std::copy(path[x].begin(), path[x].end(), back_inserter(inner_vec));
-      path_copy.push_back(inner_vec);
-    }
-    return path_copy;
-  }
+  auto getPath() const -> const std::deque<std::vector<int>> & { return path; }
 
   auto length() -> size_t {
     // show private member size, maybe unnecessary as can do snake.show().size()
