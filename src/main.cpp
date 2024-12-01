@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 #include "board.h"
-#include "main.h"
+#include <ncurses.h>
 
 // usleep works in microseconds, so multiplying by K gives milliseconds
 #define K 1000
